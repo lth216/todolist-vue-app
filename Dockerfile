@@ -1,16 +1,13 @@
-# Stage: install dependencies + build
-FROM node:18-slim as build
-
+# Build stage
+FROM node:lts-alpine as build-stage
 WORKDIR /var/app
-
-COPY package.json .
-
+COPY package*.json .
 RUN npm install
-
 COPY . .
-
 RUN npm run build
 
-CMD ["npm", "run", "serve"]
-
-EXPOSE 3000
+# Production stage
+FROM nginx:stable-alpine as production-stage
+COPY --from=build-stage /var/app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
